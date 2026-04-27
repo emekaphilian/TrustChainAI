@@ -1,0 +1,135 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: trustchainai-config
+  namespace: trustchainai
+data:
+  WEB3_RPC_ENDPOINT: "https://eth-mainnet.g.alchemy.com/v2/YOUR_API_KEY"
+  MODEL_PATH: "/models/vulnerability_detector_v1.pth"
+  CACHE_DIR: "/cache"
+  BATCH_SIZE: "32"
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: trustchainai-models-pv
+spec:
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteMany
+  gcePersistentDisk:
+    pdName: trustchainai-models-disk
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: trustchainai-models-pvc
+  namespace: trustchainai
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: trustchainai-dashboard
+  namespace: trustchainai
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: trustchainai-dashboard
+  template:
+    metadata:
+      labels:
+        app: trustchainai-dashboard
+    spec:
+      containers:
+      - name: dashboard
+        image: trustchainai:latest
+        ports:
+        - containerPort: 8501
+        envFrom:
+        - configMapRef:
+            name: trustchainai-config
+        volumeMounts:
+        - name: models
+          mountPath: /models
+        - name: cache
+          mountPath: /cache
+        resources:
+          requests:
+            memory: "2Gi"
+            cpu: "1000m"
+          limits:
+            memory: "4Gi"
+            cpu: "2000m"
+        livenessProbe:
+          httpGet:
+            path: /_stcore/health
+            port: 8501
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /_stcore/health
+            port: 8501
+          initialDelaySeconds: 5
+          periodSeconds: 5
+      volumes:
+      - name: models
+        persistentVolumeClaim:
+          claimName: trustchainai-models-pvc
+      - name: cache
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: trustchainai-dashboard
+  namespace: trustchainai
+spec:
+  selector:
+    app: trustchainai-dashboard
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 8501
+  type: LoadBalancer
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: trustchainai-scanner
+  namespace: trustchainai
+spec:
+  schedule: "0 2 * * *"  # Daily at 2 AM UTC
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: scanner
+            image: trustchainai:latest
+            command: ["python", "-m", "src.auditor.scanner"]
+            args: ["--batch-file", "/data/contracts_to_scan.txt"]
+            envFrom:
+            - configMapRef:
+                name: trustchainai-config
+            volumeMounts:
+            - name: models
+              mountPath: /models
+            - name: data
+              mountPath: /data
+          restartPolicy: OnFailure
+          volumes:
+          - name: models
+            persistentVolumeClaim:
+              claimName: trustchainai-models-pvc
+          - name: data
+            configMap:
+              name: scan-batch-data

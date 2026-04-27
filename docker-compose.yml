@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  dashboard:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    ports:
+      - "8501:8501"
+    environment:
+      - WEB3_RPC_ENDPOINT=https://eth-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./data:/app/data
+      - ./results:/app/results
+    networks:
+      - trustchain
+
+  scanner:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    environment:
+      - WEB3_RPC_ENDPOINT=https://eth-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./data:/app/data
+      - ./results:/app/results
+    networks:
+      - trustchain
+    entrypoint: ["python", "-m", "src.auditor.scanner"]
+    command: ["--batch-file", "data/contracts_to_scan.txt"]
+    depends_on:
+      - dashboard
+
+networks:
+  trustchain:
+    driver: bridge
