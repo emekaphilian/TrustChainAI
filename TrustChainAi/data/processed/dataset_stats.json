@@ -1,0 +1,80 @@
+{
+  "total": 6879,
+  "train": {
+    "count": 4815,
+    "label_distribution": {
+      "other": 696,
+      "front_running_mev": 480,
+      "reentrancy": 445,
+      "access_control": 433,
+      "timestamp_dependence": 429,
+      "dos_gas": 424,
+      "flash_loan_oracle": 421,
+      "proxy_storage_collision": 420,
+      "misnamed_constructor": 420,
+      "flash_loan_single_block": 420,
+      "integer_overflow": 105,
+      "unchecked_call": 94,
+      "tx_origin_phishing": 28
+    }
+  },
+  "val": {
+    "count": 1032,
+    "label_distribution": {
+      "other": 149,
+      "front_running_mev": 103,
+      "reentrancy": 96,
+      "access_control": 92,
+      "timestamp_dependence": 92,
+      "flash_loan_oracle": 91,
+      "dos_gas": 91,
+      "flash_loan_single_block": 90,
+      "proxy_storage_collision": 90,
+      "misnamed_constructor": 90,
+      "integer_overflow": 22,
+      "unchecked_call": 20,
+      "tx_origin_phishing": 6
+    }
+  },
+  "test": {
+    "count": 1032,
+    "label_distribution": {
+      "other": 149,
+      "front_running_mev": 103,
+      "reentrancy": 95,
+      "access_control": 93,
+      "timestamp_dependence": 92,
+      "dos_gas": 91,
+      "flash_loan_single_block": 90,
+      "misnamed_constructor": 90,
+      "proxy_storage_collision": 90,
+      "flash_loan_oracle": 90,
+      "integer_overflow": 23,
+      "unchecked_call": 20,
+      "tx_origin_phishing": 6
+    }
+  },
+  "sources": {
+    "synthetic": 5400,
+    "defihack": 729,
+    "solidifi": 582,
+    "smartbugs": 143,
+    "notsosmarts": 25
+  },
+  "labels": {
+    "safe": 0,
+    "reentrancy": 1,
+    "integer_overflow": 2,
+    "access_control": 3,
+    "tx_origin_phishing": 4,
+    "dos_gas": 5,
+    "unchecked_call": 6,
+    "front_running_mev": 7,
+    "timestamp_dependence": 8,
+    "proxy_storage_collision": 9,
+    "flash_loan_oracle": 10,
+    "flash_loan_single_block": 11,
+    "misnamed_constructor": 12,
+    "other": 13
+  }
+}
